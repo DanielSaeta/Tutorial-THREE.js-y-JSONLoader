@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Nave 3D</title>
+        <meta charset="utf-8">
+    </head>
+    <body>
+        <script src="js/three.min.js"></script>
+        <script src="js/OrbitControls.js"></script>
+        
+        <script>
+        
+            // Establecer variables globales de la escena, cámara y render.
+            var  escena, camara, render;
+            // Llamar las funciones que necesitamos.
+            iniciarEscena();
+            animar();
+            
+            // Función para inicializar la escena.
+            function iniciarEscena(){
+                
+                // Crear la escena y las variables globales que usaremos para definir su tamaño.
+                escena = new THREE.Scene();
+                var ANCHO = window.innerWidth,
+                    ALTO = window.innerHeight;
+                
+                // Crear un renderizador(WebGL), especificar su tamaño con las variables anteriores y añadirlo al DOM.
+                render = new THREE.WebGLRenderer();
+                render.setSize(ANCHO, ALTO);
+                document.body.appendChild(render.domElement);
+                
+                // Crear una cámara(ángulodeVisión, aspectRatio, distanciaMinima, distanciaMáxima), posicionarla alejada un poco de nuestro modelo y añadirla a la escena.
+                camara = new THREE.PerspectiveCamera(45, ANCHO/ALTO, 0.1, 15000); // el aspectRatio es la relación del ancho y alto de la pantalla.
+                camara.position.set(20,6,0); // posición x,y,z de la cámara.
+                escena.add(camara);
+                
+                // Crear un event listener que re-establezca el tamaño del render con el tamaño de la ventana del navegador.
+                window.addEventListener('resize', function(){
+                    var ANCHO = window.innerWidth,
+                        ALTO = window.innerHeight;
+                    render.setSize(ANCHO, ALTO);
+                    camara.aspect = ANCHO/ALTO;
+                    camara.updateProjectionMatrix();
+                });
+                
+                // Indicar el color de fondo a la escena.
+                render.setClearColorHex(0x333F47, 1);
+                
+                // Crear luces puntuales, ubicarlas y añadirlas a la escena.
+                var luz1 = new THREE.PointLight(0xffffff); // color de luz blanca(normal).
+                luz1.position.set(-100,200,50); // x,y,z = luz superior, lateral izquierda.
+                var luz2 = new THREE.PointLight(0xffffff);
+                luz2.position.set(100,-100,0); // x,y,z = luz inferior, lateral derecha.
+                escena.add(luz1);
+                escena.add(luz2);
+                
+                // Cargar el objeto 3D(.json) con JSONLoader, ponerle un material, posicionarlo y añadirlo a la escena.
+                var loader = new THREE.JSONLoader();
+                loader.load("models/nave.json", function(geometria){ // función para cargar un objeto 3D con JSON.
+                    var material = new THREE.MeshLambertMaterial({color: 0xE6E6E6}); // color del material Lamber básico.
+                    objeto = new THREE.Mesh(geometria, material);
+                    objeto.position.set(-4,-6,0);
+                    escena.add(objeto);
+                });
+                
+                // Añadir OrbitControls para navegar alrededor del objeto 3D con el mouse.
+                controles = new THREE.OrbitControls(camara, render.domElement);
+            }
+            
+            // Función para animar la rotación del objeto 3D cada milisegundo(0.001), renderizar la escena y actualizarla
+            function animar(){
+                // Permite que el navegador repinte la escena cada milisegundo de nuestro tiempo establecido para el próximo ciclo de animación.
+                requestAnimationFrame(animar);
+                var tiempo = Date.now() * 0.001;
+                objeto.rotation.y += 0.01;
+                // Renderiza la escena y actualiza los controles.
+                render.render(escena, camara);
+                controles.update();
+            }
+        </script>
+    </body>
+</html>
